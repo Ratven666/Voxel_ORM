@@ -1,57 +1,52 @@
-from utils.create_database import engine
-from config import FILE_NAME
+from db_models import Scan
+from utils.create_database import Session
+from config import CHUNK_COUNT
 
-from db_models import PointDB
+from db_models.Point import Point
+from utils.parsers.Parser import Parser
 
 
-class TxtParser:
+class TxtParser(Parser):
+    __supported_file_extension__ = [".txt"]
 
-    def __init__(self, file_name=FILE_NAME, chunk_count=100_000, db_engine=engine):
-        self.__file_name = file_name
+    def __init__(self, chunk_count=CHUNK_COUNT):
+        super().__init__()
         self.__chunk_count = chunk_count
-        self.__engine = db_engine
+        self.__last_point_id = self.__get_last_point_id()
 
-    # def load_data(self):
-    #     with open(self.__file_name, "rt", encoding="utf-8") as file:
-    #         points = []
-    #         with self.__engine.connect() as db_engine:
-    #             for line in file:
-    #                 line = line.strip().split()
-    #                 point = {"X": line[0], "Y": line[1], "Z": line[2],
-    #                          "R": line[3], "G": line[4], "B": line[5]}
-    #                 points.append(point)
-    #                 if len(points) == self.__chunk_count:
-    #                     db_engine.execute(
-    #                         PointDB.__table__.insert(),
-    #                         points
-    #                     )
-    #                     points = []
-    #             db_engine.execute(
-    #                 PointDB.__table__.insert(),
-    #                 points
-    #             )
-    #             db_engine.commit()
+    @property
+    def chunk_count(self):
+        return self.__chunk_count
 
-    def __parse(self):
-        with open(self.__file_name, "rt", encoding="utf-8") as file:
-            points = []
-            for line in file:
-                line = line.strip().split()
-                point = {"X": line[0], "Y": line[1], "Z": line[2],
-                         "R": line[3], "G": line[4], "B": line[5],
-                         "nX": line[6], "nY": line[7], "nZ": line[8]}
-                points.append(point)
-                if len(points) == self.__chunk_count:
-                    yield points
-                    points = []
-            yield points
+    @chunk_count.setter
+    def chunk_count(self, chunk_count: int):
+        self.__chunk_count = chunk_count
 
     @staticmethod
-    def __insert_to_db(data, db_engine_connection):
-        db_engine_connection.execute(PointDB.__table__.insert(), data)
+    def __get_last_point_id():
+        with Session() as session:
+            query = session.query(Point).order_by(Point.id.desc()).first()
+            if query:
+                return query.id
+            return 0
 
-    def load_data(self):
-        with self.__engine.connect() as db_engine_connection:
-            for data in self.__parse():
-                self.__insert_to_db(data, db_engine_connection)
-            db_engine_connection.commit()
+    def _parse(self, scan: Scan, file_name: str):
+        super()._check_file_extension(file_name, self.__supported_file_extension__)
+        with open(file_name, "rt", encoding="utf-8") as file:
+            points = []
+            points_scans = []
+            for line in file:
+                line = line.strip().split()
+                self.__last_point_id += 1
+                point = {"id": self.__last_point_id,
+                         "X": line[0], "Y": line[1], "Z": line[2],
+                         "R": line[3], "G": line[4], "B": line[5],
+                         # "nX": line[6], "nY": line[7], "nZ": line[8],
+                         }
+                point_scan = {"point_id": self.__last_point_id, "scan_id": scan.id}
+                points.append(point)
+                points_scans.append(point_scan)
+                if len(points) == self.__chunk_count:
+                    yield {"points": points, "points_scans": points_scans}
+                    points, points_scans = [], []
+            yield {"points": points, "points_scans": points_scans}
