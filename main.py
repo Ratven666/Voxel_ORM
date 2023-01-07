@@ -11,12 +11,10 @@ create_db()
 scan = Scan("scan")
 time0 = time.time()
 
-parser = TxtParser(scan)
+scan.load_scan_from_file(file_name=FILE_NAME)
+
+# for _ in range(10_000):
+#     scan.load_scan_from_file(file_name=FILE_NAME)
 
 time1 = time.time()
 print(time1 - time0)
-
-
-scan.load_scan_from_file(file_name=FILE_NAME)
-time2 = time.time()
-print(time2 - time1)

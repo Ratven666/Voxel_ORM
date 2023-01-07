@@ -1,8 +1,10 @@
 from abc import ABC, abstractmethod
 
-from db_models import Point, Scan
-from db_models.Point import association_table
+from db_models import PointDB, Scan
+from db_models.PointDB import points_scans_table
 from utils.create_database import engine
+
+# from utils.scan_utils.Scan_metrics import calc_scan_metrics, update_scan_in_db
 
 
 class Parser(ABC):
@@ -27,11 +29,15 @@ class Parser(ABC):
 
     @staticmethod
     def __insert_to_db(data, db_engine_connection):
-        db_engine_connection.execute(Point.Point.__table__.insert(), data["points"])
-        db_engine_connection.execute(association_table.insert(), data["points_scans"])
+        db_engine_connection.execute(PointDB.PointDB.__table__.insert(), data["points"])
+        db_engine_connection.execute(points_scans_table.insert(), data["points_scans"])
 
-    def _load_data(self, scan: Scan, file_name: str):
+    def load_data(self, scan: Scan, file_name: str):
+        from utils.scan_utils.Scan_metrics import calc_scan_metrics, update_scan_in_db
+
         with engine.connect() as db_engine_connection:
             for data in self._parse(scan, file_name):
                 self.__insert_to_db(data, db_engine_connection)
             db_engine_connection.commit()
+        scan_data = calc_scan_metrics(scan)
+        update_scan_in_db(scan_data)

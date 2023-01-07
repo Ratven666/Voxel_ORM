@@ -2,7 +2,7 @@ from db_models import Scan
 from utils.create_database import Session
 from config import CHUNK_COUNT
 
-from db_models.Point import Point
+from db_models.PointDB import PointDB
 from utils.parsers.Parser import Parser
 
 
@@ -25,13 +25,14 @@ class TxtParser(Parser):
     @staticmethod
     def __get_last_point_id():
         with Session() as session:
-            query = session.query(Point).order_by(Point.id.desc()).first()
+            query = session.query(PointDB).order_by(PointDB.id.desc()).first()
             if query:
                 return query.id
             return 0
 
     def _parse(self, scan: Scan, file_name: str):
         super()._check_file_extension(file_name, self.__supported_file_extension__)
+
         with open(file_name, "rt", encoding="utf-8") as file:
             points = []
             points_scans = []
@@ -40,8 +41,7 @@ class TxtParser(Parser):
                 self.__last_point_id += 1
                 point = {"id": self.__last_point_id,
                          "X": line[0], "Y": line[1], "Z": line[2],
-                         "R": line[3], "G": line[4], "B": line[5],
-                         # "nX": line[6], "nY": line[7], "nZ": line[8],
+                         "R": line[3], "G": line[4], "B": line[5]
                          }
                 point_scan = {"point_id": self.__last_point_id, "scan_id": scan.id}
                 points.append(point)
