@@ -1,8 +1,9 @@
-from db_models import Scan
+from classes.db_models import ScanDB
 from utils.create_database import Session
+
 from config import CHUNK_COUNT
 
-from db_models.PointDB import PointDB
+from classes.db_models.PointDB import PointDB
 from utils.parsers.Parser import Parser
 
 
@@ -30,7 +31,7 @@ class TxtParser(Parser):
                 return query.id
             return 0
 
-    def _parse(self, scan: Scan, file_name: str):
+    def _parse(self, scan: ScanDB, file_name: str):
         super()._check_file_extension(file_name, self.__supported_file_extension__)
 
         with open(file_name, "rt", encoding="utf-8") as file:

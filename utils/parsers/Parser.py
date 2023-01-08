@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 
-from db_models import PointDB, Scan
-from db_models.PointDB import points_scans_table
+from classes.db_models import PointDB, ScanDB
+from classes.db_models.PointDB import points_scans_table
 from utils.create_database import engine
 
 # from utils.scan_utils.Scan_metrics import calc_scan_metrics, update_scan_in_db
@@ -24,7 +24,7 @@ class Parser(ABC):
                             f"Ожидаются файлы типа: {__supported_file_extensions__}")
 
     @abstractmethod
-    def _parse(self, scan: Scan, file_name: str):
+    def _parse(self, scan: ScanDB, file_name: str):
         pass
 
     @staticmethod
@@ -32,7 +32,7 @@ class Parser(ABC):
         db_engine_connection.execute(PointDB.PointDB.__table__.insert(), data["points"])
         db_engine_connection.execute(points_scans_table.insert(), data["points_scans"])
 
-    def load_data(self, scan: Scan, file_name: str):
+    def load_data(self, scan: ScanDB, file_name: str):
         from utils.scan_utils.Scan_metrics import calc_scan_metrics, update_scan_in_db
 
         with engine.connect() as db_engine_connection:

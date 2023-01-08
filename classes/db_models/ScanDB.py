@@ -1,14 +1,15 @@
 from sqlalchemy import Column, Integer, String, Float
 
+from classes.abc_classes.ScanABC import ScanABC
 from config import FILE_NAME
 
 from utils.create_database import Base, Session
 from utils.parsers.Parser import Parser
 from utils.parsers import TxtParser
-# from utils.scan_utils.BaseScanIterator import BaseScanIterator
+from utils.scan_utils.BaseScanIterator import BaseScanIterator
 
 
-class Scan(Base):
+class ScanDB(ScanABC, Base):
     __tablename__ = "scans"
 
     id = Column(Integer, primary_key=True)
@@ -22,37 +23,12 @@ class Scan(Base):
     max_Z = Column(Float)
 
     def __init__(self, name):
-        self.name: str = name
-        self.len: int = 0
-        self.min_X, self.max_X = None, None
-        self.min_Y, self.max_Y = None, None
-        self.min_Z, self.max_Z = None, None
+        super().__init__(name)
         self.__init_scan()
         self.__parser: Parser = TxtParser()
 
-    def __str__(self):
-        return f"Scan [id: {self.id},\tName: {self.name}\tLEN: {self.len}]"
-
-    def __repr__(self):
-        return f"Scan [ID: {self.id}]"
-
-    def __len__(self):
-        return self.len
-
     def __iter__(self):
-        from utils.scan_utils.BaseScanIterator import BaseScanIterator
         return iter(BaseScanIterator(self))
-
-    @property
-    def parser(self):
-        return self.__parser
-
-    @parser.setter
-    def parser(self, parser: Parser):
-        if isinstance(parser, Parser):
-            self.__parser = parser
-        else:
-            raise TypeError("Нужно передать объект парсера!")
 
     def load_scan_from_file(self, file_name=FILE_NAME):
         self.__parser.load_data(self, file_name)
@@ -67,21 +43,22 @@ class Scan(Base):
             self.min_Z, self.max_Z = scan.min_Z, scan.max_Z
 
         with Session() as session:
-            scan = session.query(Scan).filter(Scan.name == self.name).first()
+            scan = session.query(ScanDB).filter(ScanDB.name == self.name).first()
             if scan is not None:
                 copy_scan_data(self, scan)
             else:
                 session.add(self)
                 session.commit()
-                scan = session.query(Scan).filter(Scan.name == self.name).first()
+                scan = session.query(ScanDB).filter(ScanDB.name == self.name).first()
                 copy_scan_data(self, scan)
 
-    def test(self):
+    @property
+    def parser(self):
+        return self.__parser
 
-        with Session() as s:
-            sc = s.query(Scan).get(self.id)
-            sc.len += 100
-            self.len = sc.len
-            print(self, "!!!")
-
-            s.commit()
+    @parser.setter
+    def parser(self, parser: Parser):
+        if isinstance(parser, Parser):
+            self.__parser = parser
+        else:
+            raise TypeError("Нужно передать объект парсера!")

@@ -1,9 +1,9 @@
 from sqlalchemy import select
 
-from db_models.PointDB import PointDB, points_scans_table
+from classes.db_models.PointDB import PointDB, points_scans_table
 
 from utils.create_database import engine
-from utils.scan_utils.PointLite import PointLite
+from classes.PointLite import PointLite
 
 
 class BaseScanIterator:

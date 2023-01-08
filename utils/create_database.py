@@ -13,8 +13,6 @@ Session = sessionmaker(bind=engine)
 
 Base = declarative_base()
 
-import db_models
-
 
 def create_db():
     db_is_created = os.path.exists(path)

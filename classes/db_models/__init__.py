@@ -1,2 +1,2 @@
-from .Scan import Scan
+from .ScanDB import ScanDB
 from .PointDB import PointDB
