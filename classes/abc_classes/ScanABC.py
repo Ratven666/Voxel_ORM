@@ -1,3 +1,7 @@
+from utils.plotters.Plotter import Plotter
+from utils.plotters.ScanPlotterMPL import ScanPlotterMPL
+from utils.scan_utils.scan_samplers.TotalPointCountScanSampler import TotalPointCountScanSampler
+
 
 class ScanABC:
 
@@ -18,3 +22,18 @@ class ScanABC:
 
     def __len__(self):
         return self.len
+
+    def plot(self, plotter=ScanPlotterMPL()):
+        plotter.plot(self)
+
+    # @property
+    # def plotter(self, plotter=ScanPlotterMPL()):
+    #     return self.__plotter
+    #
+    # @plotter.setter
+    # def plotter(self, plotter: Plotter):
+    #     if isinstance(plotter, Plotter):
+    #         self.__plotter = plotter
+    #     else:
+    #         raise TypeError(f"Нужно передать объект плоттера! "
+    #                         f"Передан {type(plotter)}, {plotter}")

@@ -1,20 +1,23 @@
 import matplotlib.pyplot as plt
 
-from classes.db_models import ScanDB
+from config import MAX_POINT_SCAN_PLOT
+
 from utils.plotters.Plotter import Plotter
+from utils.scan_utils.scan_samplers.TotalPointCountScanSampler import TotalPointCountScanSampler
 
 
 class ScanPlotterMPL(Plotter):
 
-    def __init__(self, scan: ScanDB, sampler):
-        self.fig = plt.figure()
-        self.__ax = self.fig.add_subplot(projection="3d")
-        self.__scan = scan
+    def __init__(self, sampler=TotalPointCountScanSampler(MAX_POINT_SCAN_PLOT)):
+        super().__init__()
+        self.__fig = None
+        self.__ax = None
         self.__sampler = sampler
 
-    def __calk_plot_limits(self):
-        min_x, min_y, min_z = self.__scan.min_X, self.__scan.min_Y, self.__scan.min_Z
-        max_x, max_y, max_z = self.__scan.max_X, self.__scan.max_Y, self.__scan.max_Z
+    @staticmethod
+    def __calk_plot_limits(scan):
+        min_x, min_y, min_z = scan.min_X, scan.min_Y, scan.min_Z
+        max_x, max_y, max_z = scan.max_X, scan.max_Y, scan.max_Z
         limits = [max_x - min_x,
                   max_y - min_y,
                   max_z - min_z]
@@ -29,5 +32,17 @@ class ScanPlotterMPL(Plotter):
         self.__ax.set_ylim(*plot_limits["Y_lim"])
         self.__ax.set_zlim(*plot_limits["Z_lim"])
 
-    def plot(self):
+    def plot(self, scan):
+        self.__fig = plt.figure()
+        self.__ax = self.__fig.add_subplot(projection="3d")
+        if self.__sampler is not None:
+            scan = self.__sampler.do_sampling(scan)
+        x_lst, y_lst, z_lst, c_lst = [], [], [], []
+        for point in scan:
+            x_lst.append(point.X)
+            y_lst.append(point.Y)
+            z_lst.append(point.Z)
+            c_lst.append([point.R / 255.0, point.G / 255.0, point.B / 255.0])
+        self.__set_plot_limits(self.__calk_plot_limits(scan))
+        self.__ax.scatter(x_lst, y_lst, z_lst, c=c_lst, marker="+", s=2)
         plt.show()

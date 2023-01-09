@@ -1,7 +1,5 @@
 from abc import ABC, abstractmethod
 
-from classes.db_models import ScanDB
-
 
 class ScanSamplerABC(ABC):
     @abstractmethod
@@ -12,5 +10,5 @@ class ScanSamplerABC(ABC):
         return f"Плоттер типа: {self.__class__.__name__}"
 
     @abstractmethod
-    def do_sampling(self, scan: ScanDB):
+    def do_sampling(self, scan):
         pass
