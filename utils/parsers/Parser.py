@@ -1,10 +1,9 @@
 from abc import ABC, abstractmethod
 
 from classes.db_models import PointDB, ScanDB
+from classes.db_models.ImportedFileDB import ImportedFileDB
 from classes.db_models.PointDB import points_scans_table
 from utils.create_database import engine
-
-# from utils.scan_utils.Scan_metrics import calc_scan_metrics, update_scan_in_db
 
 
 class Parser(ABC):
@@ -34,10 +33,14 @@ class Parser(ABC):
 
     def load_data(self, scan: ScanDB, file_name: str):
         from utils.scan_utils.Scan_metrics import calc_scan_metrics, update_scan_in_db
-
+        if ImportedFileDB.is_file_already_imported_into_scan(file_name, scan):
+            print(f"Файл \"{file_name}\" уже загружен в скан \"{scan.name}\"")
+            return
+        imp_file = ImportedFileDB(file_name, scan.id)
         with engine.connect() as db_engine_connection:
             for data in self._parse(scan, file_name):
                 self.__insert_to_db(data, db_engine_connection)
             db_engine_connection.commit()
         scan_data = calc_scan_metrics(scan)
         update_scan_in_db(scan_data)
+        imp_file.insert_in_db()

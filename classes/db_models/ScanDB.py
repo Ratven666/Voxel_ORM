@@ -1,12 +1,19 @@
-from sqlalchemy import Column, Integer, String, Float
+from sqlalchemy import Column, Integer, String, Float, Table, ForeignKey
 
 from classes.abc_classes.ScanABC import ScanABC
 from config import FILE_NAME
 
 from utils.create_database import Base, Session
+
 from utils.parsers.Parser import Parser
 from utils.parsers import TxtParser
 from utils.scan_utils.BaseScanIterator import BaseScanIterator
+
+imported_files_table = Table("imported_files", Base.metadata,
+                             Column("id", Integer, primary_key=True),
+                             Column("file_name", String, nullable=False),
+                             Column("scan_id", Integer, ForeignKey("scans.id"))
+                             )
 
 
 class ScanDB(ScanABC, Base):
@@ -62,3 +69,4 @@ class ScanDB(ScanABC, Base):
             self.__parser = parser
         else:
             raise TypeError("Нужно передать объект парсера!")
+
